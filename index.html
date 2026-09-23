@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Salvar evento</title>
+  <meta name="description" content="Toque para salvar este evento na sua agenda.">
+  <meta property="og:title" content="📅 Salvar evento na agenda">
+  <meta property="og:description" content="Toque para adicionar ao Calendário do iPhone, Google Agenda ou Outlook.">
+  <meta name="theme-color" content="#0b6b4f">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+  <style>
+    :root {
+      --verde: #1fa855; --verde-escuro: #0b6b4f; --fundo: #eef2ef; --cartao: #fff;
+      --texto: #1b1f1d; --suave: #5f6b66; --borda: #dde3df; --realce: #e7f8ee;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --verde: #25d366; --verde-escuro: #25d366; --fundo: #0b141a; --cartao: #1b262d;
+        --texto: #e9edef; --suave: #9aa8af; --borda: #2f3d45; --realce: #16322a;
+      }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { color-scheme: light dark; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--fundo); color: var(--texto);
+      font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; justify-content: center; padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+    }
+    .cartao {
+      width: 100%; max-width: 440px; background: var(--cartao); border-radius: 22px;
+      box-shadow: 0 8px 30px #0b6b4f1f; overflow: hidden; align-self: flex-start;
+    }
+    .cab { display: flex; gap: 14px; align-items: center; padding: 22px 22px 6px; }
+    .folha {
+      flex: none; width: 62px; border-radius: 13px; overflow: hidden; text-align: center;
+      border: 1px solid var(--borda); background: var(--cartao);
+    }
+    .folha .mes { background: #e5484d; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 0; text-transform: uppercase; letter-spacing: .04em; }
+    .folha .dia { font-size: 28px; font-weight: 700; padding: 2px 0 4px; }
+    h1 { font-size: 21px; line-height: 1.25; margin: 0; word-break: break-word; }
+    .info { padding: 10px 22px 4px; display: flex; flex-direction: column; gap: 8px; }
+    .item { display: flex; gap: 10px; align-items: flex-start; color: var(--suave); font-size: 15px; }
+    .item span:first-child { width: 22px; text-align: center; flex: none; }
+    .item a { color: var(--verde-escuro); word-break: break-all; }
+    .desc { white-space: pre-wrap; font-size: 14px; color: var(--suave); background: var(--fundo); border-radius: 12px; padding: 10px 12px; margin: 4px 0 0; max-height: 180px; overflow: auto; }
+    .botoes { display: flex; flex-direction: column; gap: 10px; padding: 18px 22px 22px; }
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font: inherit; font-weight: 650; text-decoration: none; cursor: pointer;
+      border-radius: 14px; padding: 14px; border: 1px solid var(--borda);
+      background: var(--cartao); color: var(--texto);
+    }
+    .btn.principal { background: var(--verde); border-color: var(--verde); color: #fff; font-size: 17px; }
+    @media (prefers-color-scheme: dark) { .btn.principal { color: #0b141a; } }
+    .btn:active { transform: scale(.985); }
+    .dica { font-size: 13px; color: var(--suave); text-align: center; margin: 0 22px 18px; }
+    .vazio { padding: 30px 22px; text-align: center; }
+    .secundarios { display: flex; justify-content: center; gap: 18px; padding: 0 22px 16px; font-size: 14px; }
+    .secundarios a { color: var(--suave); }
+    .qr { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0 22px 18px; padding: 16px; border-radius: 16px; background: var(--fundo); text-align: center; }
+    .qr svg { border-radius: 10px; }
+    .qr p { margin: 0; font-size: 14px; color: var(--suave); }
+    .rodape { text-align: center; font-size: 12px; color: var(--suave); padding: 0 0 16px; }
+  </style>
+</head>
+<body>
+  <main class="cartao" id="app">
+    <div class="vazio" id="vazio" hidden>
+      <h1>Evento não encontrado</h1>
+      <p style="color:var(--suave)">Este link parece incompleto. Peça para a pessoa enviar de novo.</p>
+    </div>
+  </main>
+
+  <script src="qrcode.js"></script>
+  <script src="calendario.js"></script>
+  <script>
+    (function () {
+      const ev = Calendario.lerLinkCompartilhavel(location.hash || location.search);
+      const app = document.getElementById('app');
+      if (!ev) { document.getElementById('vazio').hidden = false; return; }
+
+      const ua = navigator.userAgent;
+      const ehIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const ehCelular = ehIOS || /Android|Mobi/.test(ua);
+
+      document.title = '📅 ' + ev.titulo;
+
+      const el = (tag, attrs = {}, ...filhos) => {
+        const e = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+        }
+        e.append(...filhos);
+        return e;
+      };
+
+      const mes = ev.inicio.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      const cab = el('div', { class: 'cab' },
+        el('div', { class: 'folha' }, el('div', { class: 'mes' }, mes), el('div', { class: 'dia' }, String(ev.inicio.getDate()))),
+        el('h1', {}, ev.titulo));
+
+      const info = el('div', { class: 'info' },
+        el('div', { class: 'item' }, el('span', {}, '🕒'), el('span', {}, Calendario.formatarQuando(ev))));
+      if (ev.local) info.append(el('div', { class: 'item' }, el('span', {}, '📍'), el('span', {}, ev.local)));
+      if (ev.link) info.append(el('div', { class: 'item' }, el('span', {}, '🔗'),
+        el('a', { href: ev.link, target: '_blank', rel: 'noopener' }, ev.link)));
+      if (ev.lembrete != null) {
+        const txt = ev.lembrete >= 1440 ? `${ev.lembrete / 1440} dia(s)` : ev.lembrete >= 60 ? `${ev.lembrete / 60} h` : `${ev.lembrete} min`;
+        info.append(el('div', { class: 'item' }, el('span', {}, '🔔'), el('span', {}, `Lembrete ${txt} antes`)));
+      }
+      if (ev.descricao) info.append(el('p', { class: 'desc' }, ev.descricao));
+
+      function adicionarApple() {
+        const conteudo = Calendario.ics(ev);
+        if (ehIOS) {
+          // No iPhone, abrir o .ics direto faz o Safari mostrar “Adicionar ao Calendário”.
+          location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(conteudo);
+          return;
+        }
+        const url = URL.createObjectURL(new Blob([conteudo], { type: 'text/calendar;charset=utf-8' }));
+        const a = el('a', { href: url, download: Calendario.nomeArquivo(ev) });
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      const btnNativo = el('button', { class: 'btn principal', onclick: adicionarApple },
+        ehCelular ? '📅 Adicionar ao Calendário' : '📥 Baixar evento (.ics)');
+      const botoes = el('div', { class: 'botoes' }, btnNativo);
+      if (ev.link) botoes.append(el('a', { class: 'btn', href: ev.link, target: '_blank', rel: 'noopener' }, '▶️ Abrir link do evento'));
+
+      // No computador: QR Code para salvar no celular apontando a câmera.
+      const qr = el('div', { class: 'qr' });
+      qr.innerHTML = Calendario.qrSvg(Calendario.qrTexto(ev), 210);
+      qr.append(el('p', {}, '📱 Aponte a câmera do celular para salvar na agenda'));
+      qr.hidden = ehCelular;
+      if (ehCelular) {
+        botoes.append(el('button', { class: 'btn', onclick: () => { qr.hidden = !qr.hidden; } }, '▦ Mostrar QR Code'));
+      }
+
+      const secundarios = el('div', { class: 'secundarios' },
+        el('a', { href: Calendario.googleUrl(ev), target: '_blank', rel: 'noopener' }, 'Google Agenda'),
+        el('a', { href: Calendario.outlookUrl(ev), target: '_blank', rel: 'noopener' }, 'Outlook'));
+
+      const dica = el('p', { class: 'dica' }, ehIOS
+        ? 'Abriu dentro do WhatsApp e nada aconteceu? Toque em ••• / “Abrir no Safari” e tente de novo.'
+        : ehCelular ? 'O evento abre no app de calendário do celular.' : 'Ou baixe o arquivo e abra no seu calendário.');
+
+      app.append(cab, info, botoes, qr, secundarios, dica, el('div', { class: 'rodape' }, 'Evento no Zap'));
+    })();
+  </script>
+</body>
+</html>
