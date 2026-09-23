@@ -76,6 +76,14 @@
   <script src="qrcode.js"></script>
   <script src="calendario.js"></script>
   <script>
+    // Links diferentes só mudam depois do "#": o celular pode reaproveitar a aba
+    // aberta sem recarregar. Recarrega sempre que o evento do endereço mudar.
+    const eventoExibido = location.hash;
+    window.addEventListener('hashchange', () => location.reload());
+    window.addEventListener('pageshow', e => {
+      if (e.persisted && location.hash !== eventoExibido) location.reload();
+    });
+
     (function () {
       const ev = Calendario.lerLinkCompartilhavel(location.hash || location.search);
       const app = document.getElementById('app');
