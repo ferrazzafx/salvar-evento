@@ -1,3 +1,4 @@
+// versão 2: dois alertas e link compacto
 /*
  * Service Worker: responde a ".../evento.ics?t=...&s=..." gerando o arquivo de
  * calendário na hora, com o tipo "text/calendar". Assim o iPhone recebe um .ics

@@ -114,9 +114,10 @@
       if (ev.local) info.append(el('div', { class: 'item' }, el('span', {}, '📍'), el('span', {}, ev.local)));
       if (ev.link) info.append(el('div', { class: 'item' }, el('span', {}, '🔗'),
         el('a', { href: ev.link, target: '_blank', rel: 'noopener' }, ev.link)));
-      if (ev.lembrete != null) {
-        const txt = ev.lembrete >= 1440 ? `${ev.lembrete / 1440} dia(s)` : ev.lembrete >= 60 ? `${ev.lembrete / 60} h` : `${ev.lembrete} min`;
-        info.append(el('div', { class: 'item' }, el('span', {}, '🔔'), el('span', {}, `Lembrete ${txt} antes`)));
+      const alertas = Calendario.descreverAlertas(ev);
+      if (alertas) {
+        const plural = Calendario.listaAlertas(ev).length > 1 ? 'Alertas' : 'Alerta';
+        info.append(el('div', { class: 'item' }, el('span', {}, '🔔'), el('span', {}, `${plural}: ${alertas}`)));
       }
       if (ev.descricao) info.append(el('p', { class: 'desc' }, ev.descricao));
 
