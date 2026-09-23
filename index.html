@@ -112,10 +112,29 @@
       }
       if (ev.descricao) info.append(el('p', { class: 'desc' }, ev.descricao));
 
-      function adicionarApple() {
+      // O Service Worker (sw.js) gera um .ics real em ".../evento.ics?...", que o
+      // celular abre no app de calendário. O iOS bloqueia links "data:".
+      const temSW = 'serviceWorker' in navigator;
+      if (temSW) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+      function aguardarSW(ms) {
+        return new Promise(resolve => {
+          if (!temSW) return resolve(false);
+          if (navigator.serviceWorker.controller) return resolve(true);
+          const t = setTimeout(() => resolve(false), ms);
+          navigator.serviceWorker.addEventListener('controllerchange', () => { clearTimeout(t); resolve(true); }, { once: true });
+        });
+      }
+
+      const parametros = (location.hash || location.search).replace(/^[#?]/, '');
+
+      async function adicionarApple() {
         const conteudo = Calendario.ics(ev);
-        if (ehIOS) {
-          // No iPhone, abrir o .ics direto faz o Safari mostrar “Adicionar ao Calendário”.
+        if (ehCelular) {
+          if (await aguardarSW(2500)) {
+            location.href = 'evento.ics?' + parametros;
+            return;
+          }
           location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(conteudo);
           return;
         }
