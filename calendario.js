@@ -39,7 +39,9 @@
     return 'https://calendar.google.com/calendar/render?' + p.toString();
   }
 
-  function outlookUrl(ev) {
+  // tipo "pessoal" = Outlook.com/Hotmail (outlook.live.com);
+  // tipo "trabalho" = Microsoft 365 de faculdade/empresa (outlook.office.com).
+  function outlookUrl(ev, tipo = 'pessoal') {
     const p = new URLSearchParams({
       path: '/calendar/action/compose',
       rru: 'addevent',
@@ -50,7 +52,8 @@
     });
     const local = ev.local || ev.link;
     if (local) p.set('location', local);
-    return 'https://outlook.live.com/calendar/0/deeplink/compose?' + p.toString();
+    const dominio = tipo === 'trabalho' ? 'outlook.office.com' : 'outlook.live.com';
+    return `https://${dominio}/calendar/0/deeplink/compose?` + p.toString();
   }
 
   // Aceita o formato novo (alertas: [15, 0]) e o antigo (lembrete: 30).

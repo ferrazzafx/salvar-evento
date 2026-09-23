@@ -57,7 +57,7 @@
     .btn:active { transform: scale(.985); }
     .dica { font-size: 13px; color: var(--suave); text-align: center; margin: 0 22px 18px; }
     .vazio { padding: 30px 22px; text-align: center; }
-    .secundarios { display: flex; justify-content: center; gap: 18px; padding: 0 22px 16px; font-size: 14px; }
+    .secundarios { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; padding: 0 22px 16px; font-size: 14px; }
     .secundarios a { color: var(--suave); }
     .qr { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0 22px 18px; padding: 16px; border-radius: 16px; background: var(--fundo); text-align: center; }
     .qr svg { border-radius: 10px; }
@@ -169,7 +169,8 @@
 
       const secundarios = el('div', { class: 'secundarios' },
         el('a', { href: Calendario.googleUrl(ev), target: '_blank', rel: 'noopener' }, 'Google Agenda'),
-        el('a', { href: Calendario.outlookUrl(ev), target: '_blank', rel: 'noopener' }, 'Outlook'));
+        el('a', { href: Calendario.outlookUrl(ev, 'pessoal'), target: '_blank', rel: 'noopener', title: 'Contas @outlook.com / @hotmail.com' }, 'Outlook.com'),
+        el('a', { href: Calendario.outlookUrl(ev, 'trabalho'), target: '_blank', rel: 'noopener', title: 'Conta da faculdade ou empresa' }, 'Outlook 365'));
 
       const dica = el('p', { class: 'dica' }, ehIOS
         ? 'Abriu dentro do WhatsApp e nada aconteceu? Toque em ••• / “Abrir no Safari” e tente de novo.'
